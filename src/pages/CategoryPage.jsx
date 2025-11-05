@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { providers as defaultProviders } from '../data/providers';
 import ServiceCard from '../components/ServiceCard';
 import SearchBar from '../components/SearchBar';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const slugify = (text) => text.toLowerCase().replace(/\s+/g, '-');
@@ -14,29 +14,49 @@ const CategoryPage = () => {
   const [allProviders, setAllProviders] = useState([]);
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'providers'), (snapshot) => {
-      const firebaseProviders = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        slug: slugify(doc.data().service || '')
-      }));
+    let unsubscribe;
 
-      const staticProvidersWithSlug = defaultProviders.map((p) => ({
-        ...p,
-        slug: slugify(p.service || '')
-      }));
+    const fetchProviders = async () => {
+      try {
+        // 🔹 Live Firestore listener
+        unsubscribe = onSnapshot(collection(db, 'providers'), (snapshot) => {
+          const firebaseProviders = snapshot.docs.map((doc) => ({
+            ...doc.data(),
+            slug: slugify(doc.data().service || '')
+          }));
 
-      setAllProviders([...staticProvidersWithSlug, ...firebaseProviders]);
-    });
+          const staticProvidersWithSlug = defaultProviders.map((p) => ({
+            ...p,
+            slug: slugify(p.service || '')
+          }));
 
-    return () => unsubscribe(); // Clean up on unmount
+          setAllProviders([...staticProvidersWithSlug, ...firebaseProviders]);
+          setLoading(false);
+        });
+      } catch (err) {
+        console.error("Error fetching Firestore data:", err);
+        // 🔹 Fallback to local providers if Firestore fails
+        const staticProvidersWithSlug = defaultProviders.map((p) => ({
+          ...p,
+          slug: slugify(p.service || '')
+        }));
+        setAllProviders(staticProvidersWithSlug);
+        setLoading(false);
+      }
+    };
+
+    fetchProviders();
+
+    // cleanup on unmount
+    return () => unsubscribe && unsubscribe();
   }, []);
 
   const searchLower = searchTerm.toLowerCase();
 
   const states = [...new Set(allProviders.map((p) => p.state).filter(Boolean))];
-
   const districts = [...new Set(
     allProviders
       .filter((p) => p.state === selectedState)
@@ -63,7 +83,7 @@ const CategoryPage = () => {
         {category} Services
       </h2>
 
-      {/* 🔽 Filters */}
+      {/* 🔹 State and District Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4 items-center justify-center">
         <select
           className="border px-4 py-2 rounded"
@@ -96,22 +116,26 @@ const CategoryPage = () => {
         </select>
       </div>
 
-      {/* 🔍 Search */}
+      {/* 🔍 Search Bar */}
       <SearchBar
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
       />
 
       {/* 🧾 Results */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {filtered.length > 0 ? (
-          filtered.map((p, index) => <ServiceCard key={index} {...p} />)
-        ) : (
-          <p className="text-center col-span-full text-gray-600">
-            No providers found with selected filters.
-          </p>
-        )}
-      </div>
+      {loading ? (
+        <p className="text-center text-gray-500">Loading providers...</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {filtered.length > 0 ? (
+            filtered.map((p, index) => <ServiceCard key={index} {...p} />)
+          ) : (
+            <p className="text-center col-span-full text-gray-600">
+              No providers found with selected filters.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

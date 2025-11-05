@@ -11,6 +11,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import Unauthorized from './pages/Unauthorized';
 import ProtectedAdminRoute from './routes/ProtectedAdminRoute';
 import ForgotPassword from './pages/ForgotPassword';
+import ProviderDetails from "./pages/ProviderDetails";
+import ReviewPage from "./pages/ReviewPage";
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -26,7 +28,8 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/complete-profile" element={<CompleteProfilePage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
+        <Route path="/provider/:uid" element={<ProviderDetails />} />
+        <Route path="/review/:uid" element={<ReviewPage />} />
         <Route
           path="/admin"
           element={
