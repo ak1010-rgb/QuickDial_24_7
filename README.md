@@ -1,9 +1,9 @@
-# FirstService
+# QuickDial24-7
 
 
-# FirstService
+# QuickDial24-7
 
-FirstService is a service provider directory platform built with **React** and **Firebase**.  
+QuickDial24-7 is a service provider directory platform built with **React** and **Firebase**.  
 Users can browse services, and providers can register, edit their profiles, and manage listings.  
 Admins have access to a protected dashboard for managing data.
 
@@ -51,8 +51,8 @@ src/
 
 ### 1. Clone the Repo
 ```bash
-git clone https://github.com/<your-username>/FirstDial.git
-cd FirstDial
+git clone https://github.com/<your-username>/QuickDial24-7.git
+cd QuickDial24-7
 ````
 
 ### 2. Install Dependencies
